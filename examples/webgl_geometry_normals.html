@@ -16,6 +16,8 @@
 	<body>
 
 		<script src="../build/three.js"></script>
+		<script src="js/loaders/STLLoader.js"></script>
+		<script src="js/loaders/ColladaLoader.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
 		<script src="js/libs/stats.min.js"></script>
 
@@ -26,32 +28,40 @@
 			var camera, controls, scene, renderer;
 
 			var cube, plane;
-
-			// Create new object by parameters
-
-			var createSomething = function( klass, args ) {
-
-				var F = function( klass, args ) {
-
-					return klass.apply( this, args );
-
-				};
-
-				F.prototype = klass.prototype;
-
-				return new F( klass, args );
-
+			const stlLoader = new THREE.STLLoader();
+			const colladaLoader = new THREE.ColladaLoader();
+			var createSomething = function(type, args, cb) {
+				if (type=="STL") {
+					stlLoader.load( 'col-small.stl', function (geometry) {
+						console.log("stl geometry", geometry);
+//						cb(geometry);
+					});
+					colladaLoader.load("col_collada.dae", collada => {
+						window.temp = collada;
+						console.log("collada", collada);
+						const geometry = collada.dae.geometries.ID2.mesh.geometry3js;
+						console.log("collada geometry", geometry);
+//						cb(geometry);
+					});
+				} else {
+					const klass = THREE[type];
+					var F = function( klass, args ) {
+						return klass.apply( this, args );
+					};
+//					console.log('class is', klass);
+					F.prototype = klass.prototype;
+					const geomtry = new F(klass, args);
+					console.log('geometry is', geomtry);
+					cb(geomtry);
+				}
 			};
 
 
 			// Cube
-
 			var materials = [];
 
 			for ( var i = 0; i < 6; i ++ ) {
-
-				materials.push( [ new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff, wireframe: false } ) ] );
-
+				materials.push([new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, wireframe: false })]);
 			}
 
 			var geometriesParams = [
@@ -83,12 +93,13 @@
 					new THREE.Vector2(10,0),
 					new THREE.Vector2(50,050),
 					new THREE.Vector2(0,100) ], 12, Math.PI*2/3, Math.PI*3/2 ] },
-				{ type: 'TextGeometry', args: ['&', {
+				{ type: 'TextGeometry', args: ['W', {
 						size: 200,
 						height: 50,
 						curveSegments: 1
 					}]},
-				{ type: 'PlaneGeometry', args: [ 200, 200, 4, 4 ] }
+				{ type: 'PlaneGeometry', args: [ 200, 200, 4, 4 ] },
+				{ type: 'STL', args: [] }
 
 			];
 
@@ -159,38 +170,48 @@
 			}
 
 			function addStuff() {
-
 				if ( window.group !== undefined ) {
-
 					scene.remove( group );
-
 				}
-
-
-
 				var params = geometriesParams[ geometryIndex ];
+				geometry = createSomething(params.type, params.args, addStuffWithGeometry);
+			}
 
-				geometry = createSomething( THREE[ params.type ], params.args );
-
+			function addStuffWithGeometry(geometry) {
 				// scale geometry to a uniform size
 				geometry.computeBoundingSphere();
 
 				var scaleFactor = 160 / geometry.boundingSphere.radius;
 				geometry.scale( scaleFactor, scaleFactor, scaleFactor );
 
+				console.log("cloning");
 				var originalGeometry = geometry.clone();
+
+				console.log("computing face normals");
 				originalGeometry.computeFaceNormals();
+
+				console.log("computing vertex normals");
 				originalGeometry.computeVertexNormals( true );
 
 				// in case of duplicated vertices
+				console.log("merging");
 				geometry.mergeVertices();
+
+				console.log("computing face normals (merged)");
 				geometry.computeFaceNormals();
+
+				console.log("computing vertex normals (merged)");
 				geometry.computeVertexNormals( true );
 
 				updateInfo();
 
 				var faceABCD = "abcd";
 				var color, f, p, n, vertexIndex;
+
+				return;
+				console.log("1");
+
+				console.log(originalGeometry);
 
 				for ( i = 0; i < geometry.faces.length; i ++ ) {
 
@@ -223,14 +244,15 @@
 
 				var normalLength = 15;
 
+				console.log("2");
 				for( var f = 0, fl = geometry.faces.length; f < fl; f ++ ) {
 					var face = geometry.faces[ f ];
 
 					var centroid = new THREE.Vector3()
-						.add( geometry.vertices[ face.a ] )
-						.add( geometry.vertices[ face.b ] )
-						.add( geometry.vertices[ face.c ] )
-						.divideScalar( 3 );
+							.add( geometry.vertices[ face.a ] )
+							.add( geometry.vertices[ face.b ] )
+							.add( geometry.vertices[ face.c ] )
+							.divideScalar( 3 );
 
 					var arrow = new THREE.ArrowHelper(
 							face.normal,
@@ -240,6 +262,7 @@
 					mesh.add( arrow );
 				}
 
+				console.log("3");
 				for( var f = 0, fl = originalGeometry.faces.length; f < fl; f ++ ) {
 					var face = originalGeometry.faces[ f ];
 					if( face.vertexNormals === undefined ) {
@@ -255,6 +278,7 @@
 					}
 				}
 
+				console.log("4");
 				for( var f = 0, fl = mesh.geometry.faces.length; f < fl; f ++ ) {
 					var face = mesh.geometry.faces[ f ];
 					if( face.vertexNormals === undefined ) {
@@ -269,7 +293,6 @@
 						mesh.add( arrow );
 					}
 				}
-
 			}
 
 			function init() {
