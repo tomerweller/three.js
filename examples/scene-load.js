@@ -11,8 +11,12 @@ const initScene = loadedScene => {
     ball = scene.getObjectByName("Ball");
     ball.material.side = THREE.DoubleSide;
     ballGeometry = new THREE.Geometry().fromBufferGeometry(ball.geometry);
+    ball.geometry = ballGeometry;
+
     floor = scene.getObjectByName("Floor");
     floorGeometry = new THREE.Geometry().fromBufferGeometry(floor.geometry);
+    floor.geometry = floorGeometry;
+    floor.material.vertexColors = THREE.FaceColors;
     light = scene.getObjectByName("PointLight");
 
     console.log("scene loading...");
@@ -241,13 +245,34 @@ const calcNew = () => {
         cousticMap[f.faceIndex]+=1;
     });
 
+    Object.keys(cousticMap).forEach(i => {
+        const val = cousticMap[i]/100;
+        floorGeometry.faces[i].color.setRGB( val, val, val)
+    });
+
+    floorGeometry.faces.forEach((face,i) => {
+        const val = i in cousticMap ? cousticMap[i]/100: 0;
+        face.color.setRGB(val,val,val);
+    });
+    floorGeometry.colorsNeedUpdate = true;
+
     // console.log(cousticMap);
-
-
-    return "done"
+    return cousticMap;
 };
 
 
+const colorGeometry = geometry => {
+    geometry.faces.forEach(face => face.color.setRGB(Math.random(),Math.random(),Math.random()));
+    geometry.colorsNeedUpdate = true;
+};
+
+const perf = (fn) => {
+    const t0 = performance.now();
+    const retval = fn();
+    const t1 = performance.now();
+    console.log("Call to fn took " + (t1 - t0)/1000 + " seconds.")
+    return retval;
+};
 
 loader.load( "scene.json", initScene);
 window.addEventListener( 'resize', onWindowResize, false );

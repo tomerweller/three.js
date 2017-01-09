@@ -22,8 +22,8 @@
 			"width": 100,
 			"height": 0.1,
 			"depth": 100,
-			"widthSegments": 50,
-			"heightSegments": 50,
+			"widthSegments": 100,
+			"heightSegments": 100,
 			"depthSegments": 0
 		}],
 	"materials": [
