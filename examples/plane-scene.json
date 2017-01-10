@@ -17,14 +17,12 @@
 			"thetaLength": 3.141592653589793
 		},
 		{
-			"uuid": "F460F386-A46C-442E-83D5-265858299212",
-			"type": "BoxBufferGeometry",
-			"width": 100,
-			"height": 0.1,
-			"depth": 100,
-			"widthSegments": 50,
-			"heightSegments": 50,
-			"depthSegments": 0
+			"uuid": "B41010B0-A878-43AA-9B73-5DC929ABA8E1",
+			"type": "PlaneBufferGeometry",
+			"width": 50,
+			"height": 50,
+			"widthSegments": 300,
+			"heightSegments": 300
 		}],
 	"materials": [
 		{
@@ -42,15 +40,16 @@
 			"morphTargets": false
 		},
 		{
-			"uuid": "2892C864-A65B-46C6-A9DA-01834AB96E1B",
+			"uuid": "B72CC4E5-1E52-4E53-BE77-C49F3CE7F9A6",
 			"type": "MeshStandardMaterial",
-			"color": 16777215,
+			"color": 16711680,
 			"roughness": 0.5,
 			"metalness": 0.5,
 			"emissive": 0,
 			"depthFunc": 3,
 			"depthTest": true,
 			"depthWrite": true,
+			"alphaTest": 0.02,
 			"skinning": false,
 			"morphTargets": false
 		}],
@@ -76,7 +75,7 @@
 				"name": "PointLight",
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,5,20,5,1],
 				"color": 16777215,
-				"intensity": 0.2,
+				"intensity": 1,
 				"distance": 0,
 				"decay": 1,
 				"shadow": {
@@ -95,12 +94,12 @@
 				}
 			},
 			{
-				"uuid": "BC5E3A40-C84A-4CA6-807B-7ECC5562311D",
+				"uuid": "95326D53-26BD-4CCC-8749-BEA167B98303",
 				"type": "Mesh",
 				"name": "Floor",
-				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-				"geometry": "F460F386-A46C-442E-83D5-265858299212",
-				"material": "2892C864-A65B-46C6-A9DA-01834AB96E1B"
+				"matrix": [1,0,0,0,0,-2.220446049250313e-16,-1,0,0,1,-2.220446049250313e-16,0,0,0,0,1],
+				"geometry": "B41010B0-A878-43AA-9B73-5DC929ABA8E1",
+				"material": "B72CC4E5-1E52-4E53-BE77-C49F3CE7F9A6"
 			}],
 		"background": 11184810
 	}

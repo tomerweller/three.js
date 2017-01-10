@@ -17,8 +17,10 @@ const initScene = loadedScene => {
     floorGeometry = new THREE.Geometry().fromBufferGeometry(floor.geometry);
     floor.geometry = floorGeometry;
     floor.material.vertexColors = THREE.FaceColors;
-    light = scene.getObjectByName("PointLight");
+    // floor.material.side = THREE.DoubleSide;
 
+
+    light = scene.getObjectByName("PointLight");
     console.log("scene loading...");
     console.log(scene);
 
@@ -62,7 +64,7 @@ const animate = () => {
 
 const render = () => {
     //modify state
-    // calcNew();
+    // getCausticMap();
     renderer.render( scene, camera );
 };
 
@@ -216,17 +218,16 @@ const projectFacesBallWall = pf => {
     const vertices = [pf.face.a, pf.face.b, pf.face.c]
         .map(v => ballGeometry.vertices[v].clone().add(ball.position));
 
-    const faceProjections = vertices.reduce( (prev, v) => {
+    return vertices.reduce( (prev, v) => {
         const ray = refract(pf.face.normal, pf.ray.clone().multiplyScalar(-1), RINDEX_GLASS, RINDEX_AIR);
         const isecs = raycast(v, ray, floor);
         //we might only care about the furthest but taking all for now
         return prev.concat(isecs);
     }, []);
 
-    return faceProjections;
 };
 
-const calcNew = () => {
+const getCausticMap = () => {
     const ballBallFaces = ballGeometry.faces.reduce((prev, f) => {
         return prev.concat(projectFacesBallBall(f));
     }, []);
@@ -235,34 +236,41 @@ const calcNew = () => {
         return prev.concat(projectFacesBallWall(projectedFace));
     }, []);
 
-    // console.log(ballFloorFaces);
-
-    const cousticMap = {};
+    const causticMap = {};
     ballFloorFaces.forEach(f => {
-        if (!(f.faceIndex in cousticMap)){
-            cousticMap[f.faceIndex] = 0;
+        if (!(f.faceIndex in causticMap)){
+            causticMap[f.faceIndex] = 0;
         }
-        cousticMap[f.faceIndex]+=1;
+        causticMap[f.faceIndex]+=1;
     });
 
-    Object.keys(cousticMap).forEach(i => {
-        const val = cousticMap[i]/100;
-        floorGeometry.faces[i].color.setRGB( val, val, val)
-    });
+    return causticMap;
+};
+
+const applyCaustics = (causticMap, fnGetter) => {
+    const max = Object.keys(causticMap).reduce((currMax,i) => {
+        return causticMap[i]>currMax? causticMap[i]: currMax;
+    }, Number.MIN_SAFE_INTEGER);
+    console.log("max is", max);
+    const fn = fnGetter(max);
 
     floorGeometry.faces.forEach((face,i) => {
-        const val = i in cousticMap ? cousticMap[i]/100: 0;
+        const val = i in causticMap ? fn(causticMap[i]) : 0;
         face.color.setRGB(val,val,val);
     });
     floorGeometry.colorsNeedUpdate = true;
-
-    // console.log(cousticMap);
-    return cousticMap;
 };
 
+const getArctanFn = max => x => Math.atan(50*(x/max))/(Math.PI/2);
+
+const testCaustics = () => {
+    const map = getCausticMap();
+    applyCaustics(map, getArctanFn);
+};
 
 const colorGeometry = geometry => {
     geometry.faces.forEach(face => face.color.setRGB(Math.random(),Math.random(),Math.random()));
+    floor.material.needsUpdate = true;
     geometry.colorsNeedUpdate = true;
 };
 
@@ -274,5 +282,5 @@ const perf = (fn) => {
     return retval;
 };
 
-loader.load( "scene.json", initScene);
+loader.load( "plane-scene.json", initScene);
 window.addEventListener( 'resize', onWindowResize, false );
